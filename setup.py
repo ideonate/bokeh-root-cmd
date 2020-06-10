@@ -18,7 +18,7 @@ setuptools.setup(
     description="Command line wrapper to run a Bokeh script/folder at the root URL",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/ideonate/plotlydash-tornado-cmd",
+    url="https://github.com/ideonate/bokeh-root-cmd",
     packages=setuptools.find_packages(),
     install_requires=install_requires,
     include_package_data=True,
