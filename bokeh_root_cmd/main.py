@@ -15,6 +15,13 @@ def make_app(command, debug=False):
 
     print("Fetching Bokeh script or folder {}".format(app_py_path))
 
+    dirname = os.path.dirname(app_py_path)
+
+    print("CWD to {}".format(dirname))
+
+    os.chdir(dirname)
+
+
     app = build_single_handler_application(app_py_path, ['/'])
 
     return app
