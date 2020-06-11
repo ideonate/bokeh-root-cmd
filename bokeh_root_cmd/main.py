@@ -23,9 +23,10 @@ def make_app(command, debug=False):
 @click.command()
 @click.option('--port', default=8888, type=click.INT, help='port for the proxy server to listen on')
 @click.option('--ip', default=None, help='Address to listen on')
+@click.option('--allow-websocket-origin', default=None, multiple=True, help='Web socket origins allowed')
 @click.option('--debug/--no-debug', default=False, help='To display debug level logs')
 @click.argument('command', nargs=1, required=True)
-def run(port, ip, debug, command):
+def run(port, ip, debug, allow_websocket_origin, command):
 
     if debug:
         print('Setting debug')
@@ -33,6 +34,9 @@ def run(port, ip, debug, command):
     app = make_app(command, debug)
 
     server_kwargs = {'port': port, 'ip': ip}
+
+    if allow_websocket_origin:
+        server_kwargs['allow_websocket_origin'] = list(allow_websocket_origin)
 
     server = Server({'/': app}, **server_kwargs)
 
