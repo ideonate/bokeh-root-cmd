@@ -29,3 +29,11 @@ bokeh-root-cmd --port=8888 ~/Dev/mybokehscript.py
 ```
 
 To run directly in python: `python -m bokeh_root_cmd.main <rest of command line>`
+
+## Other command line args
+
+--allow-websocket-origin
+
+--debug
+
+--ip
