@@ -17,10 +17,9 @@ def make_app(command, debug=False):
 
     dirname = os.path.dirname(app_py_path)
 
-    print("CWD to {}".format(dirname))
-
-    os.chdir(dirname)
-
+    if os.path.isdir(dirname):
+        print("CWD to {}".format(dirname))
+        os.chdir(dirname)
 
     app = build_single_handler_application(app_py_path, ['/'])
 
