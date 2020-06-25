@@ -5,6 +5,8 @@ from bokeh.command.util import build_single_handler_application
 from bokeh.server.server import Server
 import click
 
+from .readycheck import create_ready_app
+
 class BokehException(Exception):
     pass
 
@@ -44,7 +46,7 @@ def run(port, ip, debug, allow_websocket_origin, command):
     if allow_websocket_origin:
         server_kwargs['allow_websocket_origin'] = list(allow_websocket_origin)
 
-    server = Server({'/': app}, **server_kwargs)
+    server = Server({'/': app, '/ready-check': create_ready_app()}, **server_kwargs)
 
     server.run_until_shutdown()
 
