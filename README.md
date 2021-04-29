@@ -2,8 +2,8 @@
 
 Command line wrapper to run a named Bokeh script/folder as root URL.
 
-This project is used in [ContainDS Dashboards](https://github.com/ideonate/cdsdashboards), which is a user-friendly 
-way to launch Jupyter notebooks as shareable dashboards inside JupyterHub. Also works with Streamlit and other 
+This project is used in [ContainDS Dashboards](https://github.com/ideonate/cdsdashboards), which is a user-friendly
+way to launch Jupyter notebooks as shareable dashboards inside JupyterHub. Also works with Streamlit and other
 visualization frameworks.
 
 ## Install and Run
@@ -37,3 +37,15 @@ To run directly in python: `python -m bokeh_root_cmd.main <rest of command line>
 --debug
 
 --ip
+
+## Tests
+
+In order to be able to test manually you would need to `pip install panel`. This would also install bokeh.
+
+### Single Bokeh File
+
+Run `bokeh-root-cmd test_apps/test_bokeh_hello.py` and verify the app is running at `http://localhost:8888`.
+
+### Single Panel File
+
+Run `bokeh-root-cmd test_apps/test_panel_hello.py` and verify the app is running at `http://localhost:8888`.

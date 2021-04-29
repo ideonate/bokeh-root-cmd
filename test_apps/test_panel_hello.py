@@ -1,5 +1,6 @@
 """We can use this to test the bokeh_root_cmd"""
 import panel as pn
+pn.extension(sizing_mode="stretch_width")
 
 
 def test_panel_app():
@@ -9,7 +10,9 @@ def test_panel_app():
         pn.Column: A Column based Panel app
     """
     slider = pn.widgets.FloatSlider(name="Slider")
-    return pn.Column("# Panel Test App", slider, slider.param.value).servable()
+    return pn.template.FastListTemplate(
+        title="Panel Test App", sidebar=[slider], main=[slider.param.value]
+    ).servable()
 
 
 if __name__.startswith("bokeh"):
