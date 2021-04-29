@@ -10,13 +10,13 @@ visualization frameworks.
 
 Install using pip.
 
-```
+```bash
 pip install bokeh-root-cmd
 ```
 
 The file to start is specified on the command line, for example:
 
-```
+```bash
 bokeh-root-cmd ~/Dev/mybokehscript.py
 ```
 
@@ -24,7 +24,7 @@ By default the server will listen on port 8888
 
 To specify a different port, use the --port flag.
 
-```
+```bash
 bokeh-root-cmd --port=8888 ~/Dev/mybokehscript.py
 ```
 
