@@ -2,10 +2,10 @@
 import pytest
 from bokeh.application.application import Application
 
-from bokeh_root_cmd.main import BokehServer
+from bokeh_root_cmd.main import BokehServer, PanelServer
 
 
-@pytest.fixture(params=[BokehServer,])
+@pytest.fixture(params=[BokehServer, PanelServer])
 def server_class(request):
     return request.param
 

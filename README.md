@@ -28,6 +28,12 @@ To specify a different port, use the --port flag.
 bokeh-root-cmd --port=8888 ~/Dev/mybokehscript.py
 ```
 
+To use the Panel server use the --panel flag.
+
+```bash
+bokeh-root-cmd --panel ~/Dev/mybokehscript.py
+```
+
 To run directly in python: `python -m bokeh_root_cmd.main <rest of command line>`
 
 ## Other command line args
@@ -40,16 +46,26 @@ To run directly in python: `python -m bokeh_root_cmd.main <rest of command line>
 
 ## Tests
 
-In order to be able to test manually you would need to `pip install panel`. This would also install bokeh.
+In order to be able to test manually you would need to `pip install panel pytest`. This would also install bokeh.
 
-### Single Bokeh File
+### Automated Tests
+
+```bash
+pytest tests.py
+```
+
+### Single File on Bokeh Server
 
 Run `bokeh-root-cmd test_apps/test_bokeh_hello.py` and verify the app is running at `http://localhost:8888`.
 
-### Single Panel File
+### Single File on Panel Server
 
-Run `bokeh-root-cmd test_apps/test_panel_hello.py` and verify the app is running at `http://localhost:8888`.
+Run `bokeh-root-cmd --panel test_apps/test_panel_hello.py` and verify the app is running at `http://localhost:8888`.
 
-### Multiple Bokeh Files
+### Multiple Files on Bokeh Server
 
 Run `bokeh-root-cmd test_apps/*.py` and verify the app index is running at `http://localhost:8888` and test apps at `http://localhost:8888/test_bokeh_hello` and `http://localhost:8888/test_panel_hello`.
+
+### Multiple Files on Panel Server
+
+Run `bokeh-root-cmd --panel test_apps/*.py` and verify the app index is running at `http://localhost:8888` and test apps at `http://localhost:8888/test_bokeh_hello` and `http://localhost:8888/test_panel_hello`.
