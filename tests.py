@@ -1,11 +1,17 @@
 """Test of the main functionality"""
-from bokeh_root_cmd.main import _get_applications, _get_server_kwargs, INDEX_HTML
+import pytest
 from bokeh.application.application import Application
 
+from bokeh_root_cmd.main import BokehServer
 
-def test_get_server_kwargs_single_app():
+
+@pytest.fixture(params=[BokehServer,])
+def server_class(request):
+    return request.param
+
+def test_get_server_kwargs_single_app(server_class):
     """Test Case: Starting one app"""
-    actual = _get_server_kwargs(
+    actual = server_class._get_server_kwargs(
         port=7888,
         ip="0.0.0.0",
         allow_websocket_origin=("https://awesome-panel.org",),
@@ -19,9 +25,9 @@ def test_get_server_kwargs_single_app():
     }
 
 
-def test_get_server_kwargs_multiple_apps():
+def test_get_server_kwargs_multiple_apps(server_class):
     """Test Case: Starting multiple apps"""
-    actual = _get_server_kwargs(
+    actual = server_class._get_server_kwargs(
         port=7888,
         ip="0.0.0.0",
         allow_websocket_origin=("https://awesome-panel.org",),
@@ -34,21 +40,21 @@ def test_get_server_kwargs_multiple_apps():
         "allow_websocket_origin": ["https://awesome-panel.org"],
         "use_index": True,
         "redirect_root": True,
-        "index": INDEX_HTML,
+        "index": server_class.index_html,
     }
 
 
-def test_get_applications_single_app():
+def test_get_applications_single_app(server_class):
     """Test Case: Starting one app"""
-    actual = _get_applications(command=("test_apps/test_bokeh_hello.py",), debug=False)
+    actual = server_class._get_applications(command=("test_apps/test_bokeh_hello.py",), debug=False)
 
     assert len(actual) == 1
     assert isinstance(actual["/"], Application)
 
 
-def test_get_applications_multiple_apps():
+def test_get_applications_multiple_apps(server_class):
     """Test Case: Starting multiple apps"""
-    actual = _get_applications(
+    actual = server_class._get_applications(
         command=("test_apps/test_bokeh_hello.py", "test_apps/test_panel_hello.py"), debug=False
     )
 
