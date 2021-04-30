@@ -16,14 +16,13 @@ from .readycheck import create_ready_app
 
 import logging
 
-# create logger with 'spam_application'
+FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+
+logging.basicConfig(format=FORMAT)
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+
 logger = logging.getLogger('bokeh_root_cmd')
-logger.setLevel(logging.ERROR)
-ch = logging.StreamHandler()
-ch.setLevel(logging.ERROR)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-ch.setFormatter(formatter)
-logger.addHandler(ch)
 
 _BOKEH_INDEX_HTML = str(pathlib.Path(bokeh.server.views.__file__).parent / "app_index.html")
 class BokehServer:
@@ -79,21 +78,24 @@ class BokehServer:
         return server_kwargs
 
     def run(self, port, ip, debug, allow_websocket_origin, command):
-        logger.info("Starting Server")
+        logger.info("Starting %s", type(self).__name__)
         if debug:
-            logger.setLevel(logging.DEBUG)
-            ch.setLevel(logging.DEBUG)
-            logger.debug("ip = %s", ip)
-            logger.debug("port = %s", port)
-            logger.debug("debug = %s", debug)
-            logger.debug("allow_websocket_origin = %s", allow_websocket_origin)
-            logger.debug("command = %s", command)
+            root_logger.setLevel(logging.DEBUG)
+
+        logger.debug("ip = %s", ip)
+        logger.debug("port = %s", port)
+        logger.debug("debug = %s", debug)
+        logger.debug("allow_websocket_origin = %s", allow_websocket_origin)
+        logger.debug("command = %s", command)
 
         applications = self._get_applications(command, debug)
         applications["/ready-check"] = create_ready_app()
         logger.debug("applications = %s", list(applications.keys()))
 
         server_kwargs = self._get_server_kwargs(port, ip, allow_websocket_origin, command)
+        if debug:
+            server_kwargs["log_level"]="debug"
+        server_kwargs["log_format"]=FORMAT
         logger.debug("server_kwargs = %s", server_kwargs)
 
         server = self.server_class(applications, **server_kwargs)
