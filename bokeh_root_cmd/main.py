@@ -9,12 +9,12 @@ import click
 from bokeh.application.application import Application
 from bokeh.command.util import build_single_handler_application
 from bokeh.server.server import Server as _BkServer
+from bokeh.server.views.root_handler import RootHandler
 from panel.io.server import INDEX_HTML as _PANEL_INDEX_HTML
 from panel.io.server import Server as _PnServer
+import logging
 
 from .readycheck import create_ready_app
-
-import logging
 
 FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
@@ -132,6 +132,21 @@ def run(port, ip, debug, allow_websocket_origin, server, command):
         allow_websocket_origin=allow_websocket_origin,
         command=command,
     )
+
+
+# Bokeh/ Panel can serve an index page with a list of applications at "/"
+# The below is a workaround to avoid including the 'ready-check' application
+def _root_handler_initialize_without_ready_check(self, *args, **kw):
+        kw["applications"]=kw["applications"].copy()
+        if "/ready-check" in kw["applications"]:
+            kw["applications"].pop("/ready-check")
+
+        self.applications = kw["applications"]
+        self.prefix = kw["prefix"]
+        self.index = kw["index"]
+        self.use_redirect = kw["use_redirect"]
+
+RootHandler.initialize = _root_handler_initialize_without_ready_check
 
 
 if __name__ == "__main__":
