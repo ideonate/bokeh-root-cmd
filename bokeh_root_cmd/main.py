@@ -1,27 +1,24 @@
-from argparse import ArgumentParser
-import os
+"""Command line wrapper to serve one or more named Bokeh scripts or folders."""
 import logging
-from bokeh import application
-
-from bokeh.command.util import build_single_handler_application
-from bokeh.server.server import Server
-import click
-
-from .readycheck import create_ready_app
+import os
+import pathlib
+from typing import Any, Dict, Tuple
 
 import bokeh.server.views
-import pathlib
+import click
+from bokeh.application.application import Application
+from bokeh.command.util import build_single_handler_application
+from bokeh.server.server import Server
+
+from .readycheck import create_ready_app
 
 INDEX_HTML = str(pathlib.Path(bokeh.server.views.__file__).parent / "app_index.html")
 
 
-class BokehException(Exception):
-    pass
-
-
-def make_app(command, url="/", debug=False):
-    # Command can be absolute, or could be relative to cwd
+def _make_app(command: str, url: str="/", debug: bool=False) -> Application:
     cwd_original = os.getcwd()
+
+    # Command can be absolute, or could be relative to cwd
     app_py_path = os.path.join(os.getcwd(), command)
 
     print("Fetching script or folder {}".format(app_py_path))
@@ -39,18 +36,18 @@ def make_app(command, url="/", debug=False):
 
     return app
 
-def get_applications(command, debug):
+def _get_applications(command: Tuple[str], debug=False) -> Dict[str, Application]:
     apps = {}
     if len(command) == 1:
-        apps = {"/": make_app(command[0], debug)}
+        apps = {"/": _make_app(command[0], debug)}
     elif len(command) > 1:
         for cmd in command:
-            application = make_app(cmd, debug)
+            application = _make_app(cmd, debug)
             route = application.handlers[0].url_path()
             apps[route] = application
     return apps
 
-def get_server_kwargs(port, ip, allow_websocket_origin, command):
+def _get_server_kwargs(port, ip, allow_websocket_origin, command) -> Dict[str, Any]:
     server_kwargs = {"port": port, "ip": ip}
     if allow_websocket_origin:
         server_kwargs["allow_websocket_origin"] = list(allow_websocket_origin)
@@ -71,9 +68,9 @@ def run(port, ip, debug, allow_websocket_origin, command):
     if debug:
         print("Setting debug")
 
-    server_kwargs = get_server_kwargs(port, ip, allow_websocket_origin, command)
+    server_kwargs = _get_server_kwargs(port, ip, allow_websocket_origin, command)
 
-    applications = get_applications(command, debug)
+    applications = _get_applications(command, debug)
     applications["/ready-check"] = create_ready_app()
 
     server = Server(applications, **server_kwargs)
@@ -82,10 +79,7 @@ def run(port, ip, debug, allow_websocket_origin, command):
 
 
 if __name__ == "__main__":
-
     try:
-
         run()
-
     except SystemExit as se:
         print("Caught SystemExit {}".format(se))
