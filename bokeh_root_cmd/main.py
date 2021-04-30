@@ -116,11 +116,11 @@ class PanelServer(BokehServer):
 )
 @click.option("--debug/--no-debug", default=False, help="To display debug level logs")
 @click.option(
-    "--panel/--no-panel", default=False, help="Whether or not to serve using the Panel server"
+    "--server", default="bokeh", type=click.STRING, help="The server to use. One of bokeh or panel. Default is bokeh."
 )
 @click.argument("command", nargs=-1, required=True)
-def run(port, ip, debug, allow_websocket_origin, panel, command):
-    if panel:
+def run(port, ip, debug, allow_websocket_origin, server, command):
+    if server=="panel":
         server = PanelServer()
     else:
         server = BokehServer()
