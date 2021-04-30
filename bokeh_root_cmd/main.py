@@ -9,12 +9,14 @@ import click
 from bokeh.application.application import Application
 from bokeh.command.util import build_single_handler_application
 from bokeh.server.server import Server as _BkServer
-from panel.io.server import Server as _PnServer, INDEX_HTML as _PANEL_INDEX_HTML
+from panel.io.server import INDEX_HTML as _PANEL_INDEX_HTML
+from panel.io.server import Server as _PnServer
+
 from .readycheck import create_ready_app
 
-
+_BOKEH_INDEX_HTML = str(pathlib.Path(bokeh.server.views.__file__).parent / "app_index.html")
 class BokehServer:
-    index_html = str(pathlib.Path(bokeh.server.views.__file__).parent / "app_index.html")
+    index_html = _BOKEH_INDEX_HTML
     server_class = _BkServer
 
     @staticmethod
