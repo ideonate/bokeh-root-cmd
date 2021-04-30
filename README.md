@@ -49,3 +49,7 @@ Run `bokeh-root-cmd test_apps/test_bokeh_hello.py` and verify the app is running
 ### Single Panel File
 
 Run `bokeh-root-cmd test_apps/test_panel_hello.py` and verify the app is running at `http://localhost:8888`.
+
+### Multiple Bokeh Files
+
+Run `bokeh-root-cmd test_apps/*.py` and verify the app index is running at `http://localhost:8888` and test apps at `http://localhost:8888/test_bokeh_hello` and `http://localhost:8888/test_panel_hello`.
