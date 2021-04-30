@@ -14,6 +14,17 @@ from panel.io.server import Server as _PnServer
 
 from .readycheck import create_ready_app
 
+import logging
+
+# create logger with 'spam_application'
+logger = logging.getLogger('bokeh_root_cmd')
+logger.setLevel(logging.ERROR)
+ch = logging.StreamHandler()
+ch.setLevel(logging.ERROR)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+
 _BOKEH_INDEX_HTML = str(pathlib.Path(bokeh.server.views.__file__).parent / "app_index.html")
 class BokehServer:
     index_html = _BOKEH_INDEX_HTML
@@ -26,18 +37,21 @@ class BokehServer:
         # Command can be absolute, or could be relative to cwd
         app_py_path = os.path.join(os.getcwd(), command)
 
-        print("Fetching script or folder {}".format(app_py_path))
-
         dirname = os.path.dirname(app_py_path)
 
+        if app_py_path==dirname:
+            logger.debug("Fetching folder {}".format(app_py_path))
+        else:
+            logger.debug("Fetching script {}".format(app_py_path))
+
         if os.path.isdir(dirname):
-            print("Changing CWD to {}".format(dirname))
+            logger.debug("Changing working dir to {}".format(dirname))
             os.chdir(dirname)
 
         app = build_single_handler_application(app_py_path, [url])
 
         os.chdir(cwd_original)
-        print("Changing CWD back to {}".format(cwd_original))
+        logger.debug("Changing working dir back to {}".format(cwd_original))
 
         return app
 
@@ -65,13 +79,22 @@ class BokehServer:
         return server_kwargs
 
     def run(self, port, ip, debug, allow_websocket_origin, command):
+        logger.info("Starting Server")
         if debug:
-            print("Setting debug")
-
-        server_kwargs = self._get_server_kwargs(port, ip, allow_websocket_origin, command)
+            logger.setLevel(logging.DEBUG)
+            ch.setLevel(logging.DEBUG)
+            logger.debug("ip = %s", ip)
+            logger.debug("port = %s", port)
+            logger.debug("debug = %s", debug)
+            logger.debug("allow_websocket_origin = %s", allow_websocket_origin)
+            logger.debug("command = %s", command)
 
         applications = self._get_applications(command, debug)
         applications["/ready-check"] = create_ready_app()
+        logger.debug("applications = %s", list(applications.keys()))
+
+        server_kwargs = self._get_server_kwargs(port, ip, allow_websocket_origin, command)
+        logger.debug("server_kwargs = %s", server_kwargs)
 
         server = self.server_class(applications, **server_kwargs)
 
@@ -113,4 +136,4 @@ if __name__ == "__main__":
     try:
         run()
     except SystemExit as se:
-        print("Caught SystemExit {}".format(se))
+        logger.error("Caught SystemExit {}".format(se))
