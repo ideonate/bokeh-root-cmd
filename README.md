@@ -70,3 +70,6 @@ Run `bokeh-root-cmd --server=panel test_apps/*.py` and verify the app index is r
 You can also specify them individually
 
 Run `bokeh-root-cmd --server=panel test_apps/test_bokeh_hello.py test_apps/test_panel_hello.py` and verify the app index is running at `http://localhost:8888` and test apps at `http://localhost:8888/test_bokeh_hello` and `http://localhost:8888/test_panel_hello`. Note that no `ready-check' app is included in the index list.
+
+
+Thank you to [MarcSkovMadsen](https://github.com/MarcSkovMadsen) for contributions.
