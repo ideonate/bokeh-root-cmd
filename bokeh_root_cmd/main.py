@@ -10,8 +10,6 @@ from bokeh.application.application import Application
 from bokeh.command.util import build_single_handler_application
 from bokeh.server.server import Server as _BkServer
 from bokeh.server.views.root_handler import RootHandler
-from panel.io.server import INDEX_HTML as _PANEL_INDEX_HTML
-from panel.io.server import Server as _PnServer
 import logging
 
 from .readycheck import create_ready_app
@@ -24,10 +22,15 @@ root_logger.setLevel(logging.INFO)
 
 logger = logging.getLogger('bokeh_root_cmd')
 
-_BOKEH_INDEX_HTML = str(pathlib.Path(bokeh.server.views.__file__).parent / "app_index.html")
 class BokehServer:
-    index_html = _BOKEH_INDEX_HTML
-    server_class = _BkServer
+
+    @staticmethod
+    def _get_index_html():
+        return str(pathlib.Path(bokeh.server.views.__file__).parent / "app_index.html")
+
+    @staticmethod
+    def _get_server_class():
+        return _BkServer
 
     @staticmethod
     def _make_app(command: str, url: str = "/", debug: bool = False) -> Application:
@@ -36,7 +39,10 @@ class BokehServer:
         # Command can be absolute, or could be relative to cwd
         app_py_path = os.path.join(os.getcwd(), command)
 
-        dirname = os.path.dirname(app_py_path)
+        if os.path.isdir(app_py_path):
+            dirname = app_py_path
+        else:
+            dirname = os.path.dirname(app_py_path)
 
         if app_py_path==dirname:
             logger.debug("Fetching folder {}".format(app_py_path))
@@ -55,25 +61,44 @@ class BokehServer:
         return app
 
     @classmethod
+    def _is_single_app(cls, cmd: str):
+        """
+        Return True if the path specified in `cmd` is exactly one app: either a single py/ipynb file 
+        or a folder containing a main.py or main.ipynb file.
+        """
+        cmd_path = pathlib.Path(cmd)
+        return cmd_path.is_file() or (cmd_path / "main.py").is_file() or (cmd_path / "main.ipynb").is_file()
+
+    @classmethod
     def _get_applications(cls, command: Tuple[str], debug=False) -> Dict[str, Application]:
+        
+        if len(command) == 1 and cls._is_single_app(command[0]):
+            return {"/": cls._make_app(command[0], debug)}
+
         apps = {}
-        if len(command) == 1:
-            apps = {"/": cls._make_app(command[0], debug)}
-        elif len(command) > 1:
-            for cmd in command:
-                application = cls._make_app(cmd, debug)
+        
+        for cmd in command:
+            if cls._is_single_app(cmd):
+                cmds = [cmd]
+            else:
+                cmd_path = pathlib.Path(cmd)
+                cmds = list(cmd_path.glob("*.ipynb")) + list(cmd_path.glob("*.py"))
+
+            for singlecmd in cmds:
+                application = cls._make_app(singlecmd, debug)
                 route = application.handlers[0].url_path()
                 apps[route] = application
+
         return apps
 
     @classmethod
-    def _get_server_kwargs(cls, port, ip, allow_websocket_origin, command) -> Dict[str, Any]:
+    def _get_server_kwargs(cls, port, ip, allow_websocket_origin, is_single_app) -> Dict[str, Any]:
         server_kwargs = {"port": port, "ip": ip}
         if allow_websocket_origin:
             server_kwargs["allow_websocket_origin"] = list(allow_websocket_origin)
-        if len(command) > 1:
+        if not is_single_app:
             server_kwargs.update(
-                {"use_index": True, "redirect_root": True, "index": cls.index_html}
+                {"use_index": True, "redirect_root": True, "index": cls._get_index_html()}
             )
         return server_kwargs
 
@@ -92,20 +117,30 @@ class BokehServer:
         applications["/ready-check"] = create_ready_app()
         logger.debug("applications = %s", list(applications.keys()))
 
-        server_kwargs = self._get_server_kwargs(port, ip, allow_websocket_origin, command)
+        server_kwargs = self._get_server_kwargs(port, ip, allow_websocket_origin, len(applications) <= 2)
         if debug:
             server_kwargs["log_level"]="debug"
         server_kwargs["log_format"]=FORMAT
         logger.debug("server_kwargs = %s", server_kwargs)
 
-        server = self.server_class(applications, **server_kwargs)
+        server = self._get_server_class()(applications, **server_kwargs)
 
         server.run_until_shutdown()
 
 
 class PanelServer(BokehServer):
-    index_html = _PANEL_INDEX_HTML
-    server_class = _PnServer
+
+    @staticmethod
+    def _get_server_class():
+        from panel.io.server import Server as _PnServer
+
+        return _PnServer
+
+    @staticmethod
+    def _get_index_html():
+        from panel.io.server import INDEX_HTML as _PANEL_INDEX_HTML
+
+        return _PANEL_INDEX_HTML
 
 
 @click.command()

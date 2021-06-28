@@ -1,3 +1,1 @@
 Click>=7.0
-bokeh
-panel
