@@ -5,6 +5,9 @@ Command line wrapper to run one or more named Bokeh/Panel scripts/folders as roo
 This project is used in [ContainDS Dashboards](https://github.com/ideonate/cdsdashboards), which is a user-friendly
 way to launch Jupyter notebooks as shareable dashboards inside JupyterHub. Also works with Bokeh, Dash, Panel, Streamlit and other visualization frameworks.
 
+The published PyPI/Conda packages DO NOT bring in Bokeh or Panel as explicit dependencies, so you may 
+need to install those separately in your environment.
+
 ## Install and Run
 
 Install using pip.
