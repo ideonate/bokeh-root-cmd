@@ -1,7 +1,9 @@
 """Command line wrapper to serve one or more named Bokeh scripts or folders."""
 import logging
 import os
+import re
 import pathlib
+import tempfile
 from typing import Any, Dict, Tuple
 
 import bokeh.server.views
@@ -24,9 +26,39 @@ logger = logging.getLogger('bokeh_root_cmd')
 
 class BokehServer:
 
-    @staticmethod
-    def _get_index_html():
+    def __init__(self, prefix=''):
+        self.prefix = prefix
+        if self.prefix != '':
+            self.html_file = None
+
+    def __del__(self):
+        if self.prefix != '' and self.html_file is not None:
+            self.html_file.close()
+
+    def _get_default_index_html(self):
         return str(pathlib.Path(bokeh.server.views.__file__).parent / "app_index.html")
+
+    def _get_index_html(self):
+        """
+        Where there is a prefix (e.g. /user/dan/dash-test) supplied, Bokeh/Panel's server doesn't work for us.
+        It doesn't distinguish between server-side and client-side URLs.
+        We want it to serve sub-apps at the URL /PanelNotebook 
+        (so accessible at /user/dan/dash-test/PanelNotebook behind the cdsdashboards reverse proxy) 
+        but for URLs on the index page to point the browser to /user/dan/dash-test/PanelNotebook.
+        Setting prefix in Bokeh results in correct client-side behavior, but unhelpfully also 
+        serves at the prefix (So, combined with cdsdashboards reverse proxy it is only accessible at 
+        /user/dan/dash-test/user/dan/dash-test/PanelNotebook).
+        """
+        if hasattr(self, 'html_file'):
+            if self.html_file is None:
+                self.html_file = tempfile.NamedTemporaryFile("wt")
+                with open(self._get_default_index_html(), "rt") as f:
+                    for r in f.readlines():
+                        r = re.sub(r'\{\{\s*prefix\s*\}\}', self.prefix, r)
+                        self.html_file.write(r)
+                self.html_file.flush()
+            return self.html_file.name
+        return self._get_default_index_html()
 
     @staticmethod
     def _get_server_class():
@@ -91,18 +123,19 @@ class BokehServer:
 
         return apps
 
-    @classmethod
-    def _get_server_kwargs(cls, port, ip, allow_websocket_origin, is_single_app) -> Dict[str, Any]:
+    def _get_server_kwargs(self, port, ip, allow_websocket_origin, is_single_app) -> Dict[str, Any]:
         server_kwargs = {"port": port, "ip": ip}
         if allow_websocket_origin:
             server_kwargs["allow_websocket_origin"] = list(allow_websocket_origin)
         if not is_single_app:
+            index_html = self._get_index_html()
+            logger.debug("Using HTML template %s", index_html)
             server_kwargs.update(
-                {"use_index": True, "redirect_root": True, "index": cls._get_index_html()}
+                {"use_index": True, "redirect_root": True, "index": index_html}
             )
         return server_kwargs
 
-    def run(self, port, ip, debug, allow_websocket_origin, command):
+    def run(self, port, ip, debug, allow_websocket_origin, prefix, command):
         logger.info("Starting %s", type(self).__name__)
         if debug:
             root_logger.setLevel(logging.DEBUG)
@@ -111,6 +144,7 @@ class BokehServer:
         logger.debug("port = %s", port)
         logger.debug("debug = %s", debug)
         logger.debug("allow_websocket_origin = %s", allow_websocket_origin)
+        logger.debug("prefix = %s", prefix)
         logger.debug("command = %s", command)
 
         applications = self._get_applications(command, debug)
@@ -136,8 +170,7 @@ class PanelServer(BokehServer):
 
         return _PnServer
 
-    @staticmethod
-    def _get_index_html():
+    def _get_default_index_html(self):
         from panel.io.server import INDEX_HTML as _PANEL_INDEX_HTML
 
         return _PANEL_INDEX_HTML
@@ -153,18 +186,22 @@ class PanelServer(BokehServer):
 @click.option(
     "--server", default="bokeh", type=click.STRING, help="The server to use. One of bokeh or panel. Default is bokeh."
 )
+@click.option(
+    "--prefix", default="", type=click.STRING, help="URL prefix (for"
+)
 @click.argument("command", nargs=-1, required=True)
-def run(port, ip, debug, allow_websocket_origin, server, command):
+def run(port, ip, debug, allow_websocket_origin, server, prefix, command):
     if server=="panel":
-        server = PanelServer()
+        server = PanelServer(prefix)
     else:
-        server = BokehServer()
+        server = BokehServer(prefix)
 
     server.run(
         port=port,
         ip=ip,
         debug=debug,
         allow_websocket_origin=allow_websocket_origin,
+        prefix=prefix,
         command=command,
     )
 
