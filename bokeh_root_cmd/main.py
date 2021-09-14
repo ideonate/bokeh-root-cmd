@@ -51,7 +51,7 @@ class BokehServer:
         """
         if hasattr(self, 'html_file'):
             if self.html_file is None:
-                self.html_file = tempfile.NamedTemporaryFile("wt")
+                self.html_file = tempfile.NamedTemporaryFile("wt", suffix='.html')
                 with open(self._get_default_index_html(), "rt") as f:
                     for r in f.readlines():
                         r = re.sub(r'\{\{\s*prefix\s*\}\}', self.prefix, r)
