@@ -12,7 +12,7 @@ install_requires = [e.strip() for e in li_req if len(e)]
 
 setuptools.setup(
     name="bokeh-root-cmd",
-    version="0.1.1",
+    version="0.1.2",
     author="Dan Lester",
     author_email="dan@ideonate.com",
     description="Command line wrapper to run a Bokeh script/folder at the root URL",

@@ -76,3 +76,7 @@ Run `bokeh-root-cmd --server=panel test_apps/test_bokeh_hello.py test_apps/test_
 
 
 Thank you to [MarcSkovMadsen](https://github.com/MarcSkovMadsen) for contributions.
+
+## Changelog
+
+0.1.2 - Fix for Panel root dashboard when serving multiple apps. Previously caused problems in some browsers.
